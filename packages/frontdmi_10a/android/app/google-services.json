@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "126995984595",
+    "project_id": "jonathan-dmi-2025",
+    "storage_bucket": "jonathan-dmi-2025.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:126995984595:android:f7ab11316fe7ef64ee6426",
+        "android_client_info": {
+          "package_name": "utez.edu.mx_paqueteria"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "126995984595-4u6em46fojpcqmt1ugrmqtnc56cmc1uu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAoUQpnPoMHSWLx7RWZjBAUevCd97cjGyY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "126995984595-4u6em46fojpcqmt1ugrmqtnc56cmc1uu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
