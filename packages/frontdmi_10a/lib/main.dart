@@ -7,6 +7,7 @@ import 'viewmodels/usuario_viewmodel.dart'; // JonthanAyala
 import 'viewmodels/estadistica_viewmodel.dart'; // JonthanAyala - Dio
 import 'services/auth_service.dart';
 import 'services/api_service.dart'; // JonthanAyala - Dio
+import 'services/notification_service.dart';
 import 'views/login_view.dart';
 import 'views/home_view.dart';
 import 'utils/app_theme.dart';
@@ -33,6 +34,7 @@ class MyApp extends StatelessWidget {
       providers: [
         // Servicios
         Provider(create: (_) => AuthService()),
+        Provider(create: (_) => NotificationService()),
         ProxyProvider<AuthService, ApiService>(
           update: (_, authService, __) => ApiService(authService),
         ),
