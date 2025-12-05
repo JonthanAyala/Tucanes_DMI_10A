@@ -5,6 +5,7 @@ class Usuario {
   final String email;
   final String rol; // cliente, repartidor, admin
   final String? token;
+  final String? fcmToken; // Token de Firebase Cloud Messaging
 
   Usuario({
     required this.id,
@@ -12,6 +13,7 @@ class Usuario {
     required this.email,
     required this.rol,
     this.token,
+    this.fcmToken,
   });
 
   // Serialización desde JSON
@@ -22,6 +24,7 @@ class Usuario {
       email: json['email'] ?? '',
       rol: json['rol'] ?? 'cliente',
       token: json['token'],
+      fcmToken: json['fcmToken'],
     );
   }
 
@@ -33,6 +36,7 @@ class Usuario {
       'email': email,
       'rol': rol,
       'token': token,
+      'fcmToken': fcmToken,
     };
   }
 
@@ -43,6 +47,7 @@ class Usuario {
     String? email,
     String? rol,
     String? token,
+    String? fcmToken,
   }) {
     return Usuario(
       id: id ?? this.id,
@@ -50,6 +55,7 @@ class Usuario {
       email: email ?? this.email,
       rol: rol ?? this.rol,
       token: token ?? this.token,
+      fcmToken: fcmToken ?? this.fcmToken,
     );
   }
 }

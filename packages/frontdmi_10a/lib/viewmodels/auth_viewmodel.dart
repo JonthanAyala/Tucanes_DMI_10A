@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import '../models/usuario_model.dart';
 import '../services/auth_service.dart';
 import '../services/storage_service.dart';
+import '../services/notification_service.dart';
 
 // ViewModel de autenticación - JaimeCAST69
 class AuthViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final StorageService _storageService = StorageService();
+  final NotificationService _notificationService = NotificationService();
 
   Usuario? _usuario;
   bool _isLoading = false;
@@ -26,6 +28,10 @@ class AuthViewModel extends ChangeNotifier {
       final sesion = await _storageService.obtenerSesion();
       if (sesion != null && _authService.isLoggedIn()) {
         _usuario = await _authService.obtenerUsuarioActual();
+        // Inicializar notificaciones si hay sesión activa
+        if (_usuario != null) {
+          await _notificationService.inicializar(userId: _usuario!.id);
+        }
       }
     } catch (e) {
       _errorMessage = e.toString();
@@ -46,6 +52,8 @@ class AuthViewModel extends ChangeNotifier {
 
       if (_usuario != null) {
         await _storageService.guardarSesion(_usuario!);
+        // Inicializar notificaciones después del login
+        await _notificationService.inicializar(userId: _usuario!.id);
         _isLoading = false;
         notifyListeners();
         return true;
@@ -84,6 +92,8 @@ class AuthViewModel extends ChangeNotifier {
 
       if (_usuario != null) {
         await _storageService.guardarSesion(_usuario!);
+        // Inicializar notificaciones después del registro
+        await _notificationService.inicializar(userId: _usuario!.id);
         _isLoading = false;
         notifyListeners();
         return true;
@@ -109,6 +119,8 @@ class AuthViewModel extends ChangeNotifier {
     try {
       await _authService.logout();
       await _storageService.limpiarSesion();
+      // Desuscribirse de notificaciones al cerrar sesión
+      await _notificationService.cerrarSesion();
       _usuario = null;
     } catch (e) {
       _errorMessage = e.toString();
