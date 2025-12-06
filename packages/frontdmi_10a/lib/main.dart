@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'viewmodels/auth_viewmodel.dart';
 import 'viewmodels/paquete_viewmodel.dart';
 import 'viewmodels/usuario_viewmodel.dart'; // JonthanAyala
+import 'viewmodels/notificacion_viewmodel.dart'; // JonthanAyala - Bandeja
 import 'viewmodels/estadistica_viewmodel.dart'; // JonthanAyala - Dio
 import 'services/auth_service.dart';
 import 'services/api_service.dart'; // JonthanAyala - Dio
@@ -43,6 +44,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthViewModel()),
         ChangeNotifierProvider(create: (_) => PaqueteViewModel()),
         ChangeNotifierProvider(create: (_) => UsuarioViewModel()),
+        ChangeNotifierProvider(create: (_) => NotificacionViewModel()),
         ChangeNotifierProxyProvider<ApiService, EstadisticaViewModel>(
           create: (context) => EstadisticaViewModel(context.read<ApiService>()),
           update: (_, apiService, viewModel) =>

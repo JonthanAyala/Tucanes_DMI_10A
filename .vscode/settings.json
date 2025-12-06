@@ -1,4 +1,5 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "interactive"
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.configuration.updateBuildConfiguration": "interactive",
+  "cmake.sourceDirectory": "D:/AyalaPersonal/10 cuatri/Carsi/Tucanes_DMI_9A/packages/frontdmi_10a/linux"
 }

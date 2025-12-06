@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-PaqueteriaApplication<paqueteria>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "mx.edu.utez.paqueteria.PaqueteriaApplication",
+            "projectName": "paqueteria",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}

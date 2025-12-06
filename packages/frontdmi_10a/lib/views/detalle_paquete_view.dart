@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:qr_flutter/qr_flutter.dart'; // JonthanAyala - QR
 import '../models/paquete_model.dart';
+import '../models/usuario_model.dart'; // JonthanAyala - Usuario
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/paquete_viewmodel.dart';
 import '../utils/app_theme.dart';
@@ -74,12 +76,14 @@ class DetallePaqueteView extends StatelessWidget {
               icon: const Icon(Icons.delete),
               onPressed: () => _confirmarEliminar(context),
             ),
-          // Botón de escanear QR para repartidores
+          // Botón de escanear QR para repartidores (en AppBar)
           if (usuario?.rol == AppConstants.rolRepartidor &&
-              paquete.estado != AppConstants.estadoEntregado &&
+              paquete.repartidorId == usuario?.id && // Solo su paquete
+              paquete.estado == 'en_transito' && // Solo en tránsito
               paquete.codigoQR != null)
             IconButton(
               icon: const Icon(Icons.qr_code_scanner),
+              tooltip: 'Escanear QR para entregar',
               onPressed: () => _escanearQR(context),
             ),
         ],
@@ -168,11 +172,94 @@ class DetallePaqueteView extends StatelessWidget {
                         paquete.codigoQR!,
                       ),
                   ]),
+
+                  // Sección QR para el cliente (dueño del paquete)
+                  if (paquete.codigoQR != null &&
+                      usuario?.id == paquete.clienteId)
+                    _buildSeccionQR(),
                 ],
               ),
             ),
           ],
         ),
+      ),
+      floatingActionButton: _buildBotonEntrega(context, usuario),
+    );
+  }
+
+  // Botón flotante para entregar paquete (Solo repartidor asignado)
+  Widget? _buildBotonEntrega(BuildContext context, Usuario? usuario) {
+    // Solo mostrar si es repartidor, es su paquete y está en tránsito
+    if (usuario?.rol != AppConstants.rolRepartidor) return null;
+    if (paquete.repartidorId != usuario?.id) return null;
+    if (paquete.estado != 'en_transito') return null;
+    if (paquete.codigoQR == null) return null;
+
+    return FloatingActionButton.extended(
+      onPressed: () => _escanearQR(context),
+      backgroundColor: AppTheme.successColor,
+      icon: const Icon(Icons.qr_code_scanner),
+      label: const Text('Entregar Paquete'),
+    );
+  }
+
+  // Sección visual del código QR para el cliente
+  Widget _buildSeccionQR() {
+    return Container(
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Text(
+            '📱 Código QR para Entrega',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: AppTheme.textPrimary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Muestra este código al repartidor para confirmar la entrega',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 14, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 20),
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.primaryColor, width: 2),
+            ),
+            child: QrImageView(
+              data: paquete.codigoQR!,
+              version: QrVersions.auto,
+              size: 200.0,
+              backgroundColor: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            paquete.codigoQR!,
+            style: const TextStyle(
+              fontSize: 12,
+              fontFamily: 'monospace',
+              color: AppTheme.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

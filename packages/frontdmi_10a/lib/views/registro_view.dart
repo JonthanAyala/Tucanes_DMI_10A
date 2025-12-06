@@ -38,32 +38,36 @@ class _RegistroViewState extends State<RegistroView> {
 
     final authViewModel = context.read<AuthViewModel>();
 
-    // Todos los registros automáticos son REPARTIDORES
+    // Todos los registros automáticos son CLIENTES
     final success = await authViewModel.registro(
       nombre: _nombreController.text.trim(),
       email: _emailController.text.trim(),
       password: _passwordController.text,
-      rol: AppConstants.rolRepartidor, // Siempre repartidor
+      rol: AppConstants.rolCliente, // Siempre cliente
     );
 
     if (!mounted) return;
 
     if (success) {
+      // Cerrar sesión automática que se creó al registrar
+      await authViewModel.logout();
+
+      if (!mounted) return;
+
+      // Navegar a login
+      Navigator.of(context).pushReplacementNamed(AppConstants.loginRoute);
+
       // Mostrar mensaje de éxito
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('✅ Registro exitoso como Repartidor'),
+          content: Text(
+            '✅ Cuenta creada exitosamente\n'
+            'Ya puedes iniciar sesión con tu cuenta',
+          ),
           backgroundColor: AppTheme.successColor,
-          duration: Duration(seconds: 2),
+          duration: Duration(seconds: 4),
         ),
       );
-
-      // Esperar un momento para que el usuario vea el mensaje
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      if (mounted) {
-        Navigator.of(context).pushReplacementNamed(AppConstants.homeRoute);
-      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -25,15 +25,13 @@ class NotificationService {
 
       // Obtener token FCM
       final token = await _messaging.getToken();
-      print('FCM Token: $token');
+      if (token != null) {
+        print('FCM Token obtenido: $token');
 
-      // Suscribirse al topic 'todos' para recibir notificaciones masivas
-      await _messaging.subscribeToTopic('todos');
-      print('Suscrito al topic: todos');
-
-      // Guardar token en Firestore si hay usuario logueado
-      if (userId != null && token != null) {
-        await guardarTokenEnFirestore(userId, token);
+        // Guardar token en Firestore si hay usuario logueado
+        if (userId != null) {
+          await guardarTokenEnFirestore(userId, token);
+        }
       }
 
       // Escuchar mensajes en foreground
@@ -55,12 +53,45 @@ class NotificationService {
         message.notification!.title ?? '',
         message.notification!.body ?? '',
       );
+
+      // Guardar notificación en Firestore
+      _guardarNotificacionEnFirestore(message);
     }
   }
 
   // Manejar cuando se abre la app desde notificación
   void _handleMessageOpenedApp(RemoteMessage message) {
     print('App abierta desde notificación: ${message.notification?.title}');
+    // TODO: Navegar a pantalla específica según el mensaje
+  }
+
+  // Guardar notificación en Firestore
+  Future<void> _guardarNotificacionEnFirestore(RemoteMessage message) async {
+    try {
+      // Extraer userId del data payload
+      final userId = message.data['userId'] as String?;
+      if (userId == null) {
+        print('No se puede guardar notificación: userId no encontrado');
+        return;
+      }
+
+      final notificacionId = DateTime.now().millisecondsSinceEpoch.toString();
+
+      await _firestore.collection('notificaciones').doc(notificacionId).set({
+        'id': notificacionId,
+        'userId': userId,
+        'titulo': message.notification?.title ?? 'Notificación',
+        'mensaje': message.notification?.body ?? '',
+        'tipo': message.data['tipo'] ?? 'sistema',
+        'fechaCreacion': FieldValue.serverTimestamp(),
+        'leida': false,
+        'data': message.data,
+      });
+
+      print('Notificación guardada en Firestore: $notificacionId');
+    } catch (e) {
+      print('Error al guardar notificación en Firestore: $e');
+    }
   }
 
   // Mostrar notificación local
@@ -106,13 +137,21 @@ class NotificationService {
     }
   }
 
-  // Desuscribirse del topic al cerrar sesión
-  Future<void> cerrarSesion() async {
+  // Limpiar token al cerrar sesión
+  Future<void> cerrarSesion(String userId) async {
     try {
-      await _messaging.unsubscribeFromTopic('todos');
-      print('Desuscrito del topic: todos');
+      // Eliminar token de Firestore
+      await _firestore.collection('usuarios').doc(userId).update({
+        'fcmToken': FieldValue.delete(),
+        'ultimaActualizacionToken': FieldValue.delete(),
+      });
+      print('Token eliminado de Firestore para usuario: $userId');
+
+      // Eliminar token del dispositivo
+      await _messaging.deleteToken();
+      print('Token FCM eliminado del dispositivo');
     } catch (e) {
-      print('Error al desuscribirse: ${e.toString()}');
+      print('Error al cerrar sesión de notificaciones: ${e.toString()}');
     }
   }
 }

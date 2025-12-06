@@ -3,11 +3,13 @@ import 'package:provider/provider.dart';
 import '../utils/app_theme.dart';
 import '../utils/constants.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../viewmodels/notificacion_viewmodel.dart'; // JonthanAyala - Bandeja
 import 'lista_paquetes_view.dart';
 import 'mapa_view.dart';
 import 'gestion_usuarios_view.dart';
 import 'estadisticas_view.dart'; // JonthanAyala - Dio
 import 'paquetes_cercanos_view.dart'; // JonthanAyala - Paquetes Cercanos
+import 'bandeja_notificaciones_view.dart'; // JonthanAyala - Bandeja
 import 'perfil_view.dart';
 
 // Vista principal con navegación
@@ -69,6 +71,57 @@ class _HomeViewState extends State<HomeView> {
     ];
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(_getTitulo(_currentIndex, isAdmin)),
+        backgroundColor: AppTheme.primaryColor,
+        actions: [
+          // Botón de notificaciones con badge
+          Consumer<NotificacionViewModel>(
+            builder: (context, notifViewModel, child) {
+              return Stack(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.notifications_outlined),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const BandejaNotificacionesView(),
+                        ),
+                      );
+                    },
+                  ),
+                  if (notifViewModel.noLeidasCount > 0)
+                    Positioned(
+                      right: 8,
+                      top: 8,
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 16,
+                          minHeight: 16,
+                        ),
+                        child: Text(
+                          '${notifViewModel.noLeidasCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
       body: pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
@@ -102,5 +155,19 @@ class _HomeViewState extends State<HomeView> {
             )
           : null,
     );
+  }
+
+  // Obtener título según la página actual
+  String _getTitulo(int index, bool isAdmin) {
+    if (index == 0) return 'Paquetes';
+    if (index == 1) return 'Mapa';
+    if (isAdmin) {
+      if (index == 2) return 'Estadísticas';
+      if (index == 3) return 'Usuarios';
+      if (index == 4) return 'Perfil';
+    } else {
+      if (index == 2) return 'Perfil';
+    }
+    return 'Home';
   }
 }

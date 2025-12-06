@@ -117,10 +117,26 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await _authService.logout();
+      // Guardar userId antes de limpiar
+      final userId = _usuario?.id;
+
+      // Intentar logout de Firebase (puede fallar por red, pero no debe bloquear)
+      try {
+        await _authService.logout();
+      } catch (e) {
+        print('Error en logout remoto: $e');
+      }
+
+      // SIEMPRE limpiar sesión local
       await _storageService.limpiarSesion();
-      // Desuscribirse de notificaciones al cerrar sesión
-      await _notificationService.cerrarSesion();
+
+      // Limpiar notificaciones en segundo plano (sin esperar)
+      if (userId != null) {
+        _notificationService.cerrarSesion(userId).catchError((e) {
+          print('Error al limpiar notificaciones: $e');
+        });
+      }
+
       _usuario = null;
     } catch (e) {
       _errorMessage = e.toString();

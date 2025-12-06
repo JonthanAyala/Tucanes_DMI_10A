@@ -73,13 +73,26 @@ class PaqueteCard extends StatelessWidget {
                       color: _getEstadoColor().withOpacity(0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      _getEstadoTexto(),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: _getEstadoColor(),
-                      ),
+                    child: Row(
+                      children: [
+                        if (paquete.codigoQR != null)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.qr_code,
+                              size: 14,
+                              color: AppTheme.primaryColor,
+                            ),
+                          ),
+                        Text(
+                          _getEstadoTexto(),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: _getEstadoColor(),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],

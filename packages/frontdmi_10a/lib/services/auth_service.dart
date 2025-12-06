@@ -74,6 +74,21 @@ class AuthService {
   // Cerrar sesión
   Future<void> logout() async {
     try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        // Intentar eliminar FCM Token con timeout para no bloquear el logout
+        try {
+          await _firestore
+              .collection('usuarios')
+              .doc(user.uid)
+              .update({'fcmToken': FieldValue.delete()})
+              .timeout(const Duration(seconds: 3));
+        } catch (e) {
+          // Si falla o tarda mucho, continuamos con el logout local
+          print('No se pudo eliminar el token FCM (timeout o error): $e');
+        }
+      }
+      // Siempre cerrar sesión en Firebase Auth
       await _auth.signOut();
     } catch (e) {
       throw Exception('Error al cerrar sesión: ${e.toString()}');

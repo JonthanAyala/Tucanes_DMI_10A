@@ -19,7 +19,7 @@ class PerfilView extends StatelessWidget {
         title: const Text('Mi Perfil'),
         backgroundColor: AppTheme.primaryColor,
       ),
-      body: usuario == null
+      body: (usuario == null || authViewModel.isLoading)
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
@@ -104,8 +104,8 @@ class PerfilView extends StatelessWidget {
                           const SizedBox(height: 12),
                           _buildInfoRow(
                             Icons.badge,
-                            'ID de Usuario',
-                            usuario.id,
+                            'Rol',
+                            _getRolTexto(usuario.rol),
                           ),
                         ],
                       ),
@@ -191,26 +191,37 @@ class PerfilView extends StatelessWidget {
   void _confirmarLogout(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Cerrar Sesión'),
         content: const Text('¿Estás seguro de que deseas cerrar sesión?'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text('Cancelar'),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
-              final authViewModel = context.read<AuthViewModel>();
-              await authViewModel.logout();
+              // Cerrar el diálogo primero
+              Navigator.pop(dialogContext);
 
+              // Mostrar indicador de carga global o navegar inmediatamente
+              // En este caso, navegamos al login y limpiamos el stack
+              // El AuthViewModel se encargará de limpiar la sesión en segundo plano/paralelo
+              // o esperamos un poco, pero lo importante es sacar al usuario de la pantalla actual
+
+              final authViewModel = context.read<AuthViewModel>();
+
+              // Navegar inmediatamente al Login para evitar "pantalla de carga trabada"
+              // Usamos el context original (del widget), no del diálogo
               if (context.mounted) {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginView()),
                   (route) => false,
                 );
               }
+
+              // Ejecutar logout (limpieza de datos)
+              await authViewModel.logout();
             },
             child: const Text(
               'Cerrar Sesión',

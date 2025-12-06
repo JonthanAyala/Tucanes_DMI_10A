@@ -190,7 +190,11 @@ class _GestionUsuariosViewState extends State<GestionUsuariosView> {
   }
 
   Widget _buildUsuarioCard(Usuario usuario, UsuarioViewModel viewModel) {
+    final authViewModel = context.read<AuthViewModel>();
+    final usuarioActual = authViewModel.usuario;
+
     final isAdminMaster = usuario.id == 'ADMIN_MASTER';
+    final esMismoUsuario = usuario.id == usuarioActual?.id;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -226,6 +230,23 @@ class _GestionUsuariosViewState extends State<GestionUsuariosView> {
                   ),
                 ),
               ),
+            if (esMismoUsuario && !isAdminMaster)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                margin: const EdgeInsets.only(left: 4),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Text(
+                  'TÚ',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.primaryColor,
+                  ),
+                ),
+              ),
           ],
         ),
         subtitle: Column(
@@ -245,17 +266,20 @@ class _GestionUsuariosViewState extends State<GestionUsuariosView> {
         ),
         trailing: PopupMenuButton(
           itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'editar',
-              child: Row(
-                children: [
-                  Icon(Icons.edit, size: 20),
-                  SizedBox(width: 8),
-                  Text('Editar'),
-                ],
+            // Solo mostrar editar si NO es el mismo usuario
+            if (!esMismoUsuario)
+              const PopupMenuItem(
+                value: 'editar',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, size: 20),
+                    SizedBox(width: 8),
+                    Text('Editar'),
+                  ],
+                ),
               ),
-            ),
-            if (!isAdminMaster)
+            // Solo mostrar eliminar si NO es admin master Y NO es el mismo usuario
+            if (!isAdminMaster && !esMismoUsuario)
               const PopupMenuItem(
                 value: 'eliminar',
                 child: Row(

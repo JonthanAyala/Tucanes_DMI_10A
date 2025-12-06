@@ -5,13 +5,13 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.0.0</version>
+		<version>3.2.3</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>mx.edu.utez</groupId>
 	<artifactId>paqueteria</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>paqueteria</name>
 	<description>Back para notificaciones</description>
 	<url/>
@@ -45,13 +45,18 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <optional>true</optional>
+            <version>1.18.30</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>1.62.2</version> <!-- Sustituye por la última versión disponible -->
         </dependency>
     </dependencies>
 

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 // import 'package:firebase_storage/firebase_storage.dart'; // COMENTADO: Para usar en el futuro con Firebase Storage
 import '../models/paquete_model.dart';
 import 'local_storage_service.dart'; // Servicio de almacenamiento local
+import 'notificacion_backend_service.dart'; // JonthanAyala - Backend de notificaciones
 
 // Servicio de gestión de paquetes - BojitaNoir
 // NOTA: Actualmente usa almacenamiento LOCAL para fotos
@@ -12,6 +13,8 @@ class PaqueteService {
   // final FirebaseStorage _storage = FirebaseStorage.instance; // COMENTADO: Para Firebase Storage
   final LocalStorageService _localStorage =
       LocalStorageService(); // Almacenamiento local
+  final NotificacionBackendService _backendService =
+      NotificacionBackendService(); // JonthanAyala - Backend
 
   // Obtener todos los paquetes
   Stream<List<Paquete>> obtenerPaquetes() {
@@ -88,12 +91,32 @@ class PaqueteService {
         // fotoRuta = await _guardarFotoFirebase(foto, paquete.id);
       }
 
-      final paqueteConFoto = paquete.copyWith(fotoUrl: fotoRuta);
+      // Generar código QR único - JonthanAyala
+      final codigoQR =
+          'PKG-${paquete.id}-${DateTime.now().millisecondsSinceEpoch}';
 
+      final paqueteConFoto = paquete.copyWith(
+        fotoUrl: fotoRuta,
+        codigoQR: codigoQR,
+      );
+
+      // 1. Guardar en Firestore
       await _firestore
           .collection('paquetes')
           .doc(paquete.id)
           .set(paqueteConFoto.toJson());
+
+      // 2. Notificar a repartidores (backend)
+      // No esperar respuesta para no bloquear
+      _backendService
+          .notificarNuevoPaquete(
+            paqueteId: paquete.id,
+            // destinatario y direccion ya no son necesarios, el backend los busca
+          )
+          .catchError((e) {
+            print('Error al notificar nuevo paquete al backend: $e');
+            return false;
+          });
     } catch (e) {
       throw Exception('Error al crear paquete: ${e.toString()}');
     }
@@ -146,9 +169,33 @@ class PaqueteService {
   // Actualizar estado del paquete
   Future<void> actualizarEstado(String id, String nuevoEstado) async {
     try {
+      // 1. Actualizar Firestore
       await _firestore.collection('paquetes').doc(id).update({
         'estado': nuevoEstado,
       });
+
+      // 2. Si el estado es "entregado", notificar al cliente
+      if (nuevoEstado == 'entregado') {
+        final paqueteDoc = await _firestore
+            .collection('paquetes')
+            .doc(id)
+            .get();
+
+        if (paqueteDoc.exists) {
+          final paqueteData = paqueteDoc.data()!;
+
+          // Notificar al backend (no esperar respuesta)
+          _backendService
+              .notificarPaqueteEntregado(
+                paqueteId: id,
+                clienteId: paqueteData['clienteId'],
+              )
+              .catchError((e) {
+                print('Error al notificar paquete entregado al backend: $e');
+                return false;
+              });
+        }
+      }
     } catch (e) {
       throw Exception('Error al actualizar estado: ${e.toString()}');
     }
@@ -178,12 +225,43 @@ class PaqueteService {
   // Tomar paquete (auto-asignarse)
   Future<bool> tomarPaquete(String paqueteId, String repartidorId) async {
     try {
+      // 1. Obtener datos del paquete y repartidor para la notificación
+      final paqueteDoc = await _firestore
+          .collection('paquetes')
+          .doc(paqueteId)
+          .get();
+      // Ya no necesitamos buscar al repartidor explícitamente para el nombre
+      // El backend lo hará
+
+      if (!paqueteDoc.exists) {
+        return false;
+      }
+
+      final paqueteData = paqueteDoc.data()!;
+
+      // 2. Actualizar Firestore
       await _firestore.collection('paquetes').doc(paqueteId).update({
         'repartidorId': repartidorId,
         'estado': 'en_transito',
       });
+
+      // 3. Notificar al cliente (backend)
+      // No esperar respuesta para no bloquear
+      _backendService
+          .notificarPaqueteTomado(
+            paqueteId: paqueteId,
+            clienteId: paqueteData['clienteId'],
+            repartidorId: repartidorId,
+            // repartidorNombre ya no es necesario, el backend lo busca
+          )
+          .catchError((e) {
+            print('Error al notificar paquete tomado al backend: $e');
+            return false;
+          });
+
       return true;
     } catch (e) {
+      print('Error en tomarPaquete: $e');
       return false;
     }
   }
